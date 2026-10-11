@@ -1,0 +1,25 @@
+name: One Comix browser key-shape check
+
+on:
+  push:
+    branches:
+      - research/comix-key-origin
+    paths:
+      - .github/workflows/comix-browser-key-shape-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser automation library (no browser download)
+        run: npm install --no-save --ignore-scripts playwright-core@1.56.1
+      - name: Inspect only decoded array sizes on one ordinary public title page
+        run: node research/browser_capture_shapes.cjs
