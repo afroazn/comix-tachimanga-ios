@@ -1,0 +1,25 @@
+name: Stage A public JS structural check
+
+on:
+  push:
+    branches:
+      - research/stage-a-public-js
+    paths:
+      - .github/workflows/stage-a-public-js-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  structural-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run synthetic Stage A regression tests
+        run: python -m unittest discover -s tests -p 'test_stage_a*.py' -v
+      - name: Inspect current public Comix JS modules
+        run: python research/stage_a_public_js_probe.py --url 'https://comix.ws/title/rrglg-the-great-journey-of-teenagers-folly-of-youths-arc' --max-chunks 10
