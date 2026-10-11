@@ -1,0 +1,23 @@
+name: Stage A Safari header check
+
+on:
+  push:
+    branches:
+      - research/stage-a-browser-headers
+    paths:
+      - .github/workflows/stage-a-browser-headers-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  basic-browser-request:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run a single browser-header request without tokens or WebView
+        run: python research/stage_a_browser_headers_probe.py
