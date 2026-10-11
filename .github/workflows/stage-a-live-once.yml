@@ -1,0 +1,23 @@
+name: Stage A single live HTML check
+
+on:
+  push:
+    branches:
+      - research/stage-a-native-http
+    paths:
+      - .github/workflows/stage-a-live-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  one-public-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect one public title HTML response without WebView
+        run: python research/stage_a_native_http_probe.py --url 'https://comix.ws/title/rrglg-the-great-journey-of-teenagers-folly-of-youths-arc'

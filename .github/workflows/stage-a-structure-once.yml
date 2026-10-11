@@ -1,0 +1,23 @@
+name: Stage A one-time JSON structure check
+
+on:
+  push:
+    branches:
+      - research/stage-a-native-http
+    paths:
+      - .github/workflows/stage-a-structure-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  one-public-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect query structure without displaying content or running JS
+        run: python research/stage_a_query_shape_probe.py --url 'https://comix.ws/title/rrglg-the-great-journey-of-teenagers-folly-of-youths-arc'

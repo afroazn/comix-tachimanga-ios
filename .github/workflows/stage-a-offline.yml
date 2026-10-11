@@ -1,0 +1,21 @@
+name: Stage A offline tests
+
+on:
+  push:
+    branches:
+      - research/stage-a-native-http
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  html-fixture-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test read-only native HTML probe
+        run: python -m unittest discover -s tests -p 'test_stage_a*.py' -v
