@@ -1,0 +1,23 @@
+name: Stage A one-time unsigned API check
+
+on:
+  push:
+    branches:
+      - research/stage-a-native-http
+    paths:
+      - .github/workflows/stage-a-unsigned-api-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  one-unsigned-get:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: One ordinary unsigned Comix chapter-API request
+        run: python research/stage_a_unsigned_api_probe.py --host comix.ws --hid rrglg
