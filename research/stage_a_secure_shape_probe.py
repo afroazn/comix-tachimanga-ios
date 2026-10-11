@@ -46,12 +46,13 @@ def analyze_secure(title_url: str) -> dict[str, object]:
     secure_names = [name for name in imports if "secure-" in name][:5]
     for name in secure_names:
         try:
-            stats = inspect_js(fetch(urljoin(main, name)))
+            source = fetch(urljoin(main, name))
+            stats = inspect_js(source)
             result["secure_modules"].append({
                 "file": name.rsplit("/", 1)[-1],
                 "atob_mentions": stats["atob_mentions"],
                 "static_expected_length_literals": stats["static_atob_expected_length_counts"],
-                "argument_categories": argument_categories(fetch(urljoin(main, name))),
+                "argument_categories": argument_categories(source),
             })
         except Exception as error:
             result["errors"].append(name.rsplit("/", 1)[-1] + ": " + type(error).__name__)
