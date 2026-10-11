@@ -3,7 +3,7 @@
 ## Goal
 Determine whether Comix chapter lists and pages can be fetched by ordinary HTTPS and parsed without Android WebView, for potential Tachimanga/iOS compatibility.
 
-**Status: BLOCKED ON LIVE VALIDATION. No working iOS extension has been produced.**
+**Status: Stage A live probes completed; the tested WebView-free routes are NOT sufficient. No working iOS extension has been produced.**
 
 ## Confirmed observations from copied upstream Comix 1.6.44
 - Comix.kt lines 692–712: getNativeChapterList calls /api/v1/manga/{mangaId}/chapters.
@@ -14,8 +14,17 @@ Determine whether Comix chapter lists and pages can be fetched by ordinary HTTPS
 - Comix.kt lines 320–325: the extension can parse script#initial-data queries in normal HTML, but their inclusion of complete chapter lists has NOT been confirmed.
 - The October 10 upstream PR #19791 fixed renamed JavaScript bundles, not the WebView bootstrap dependence.
 
-## Live-validation limitation
-The research environment retrieved an empty extracted text result for Comix home/browse. Direct API URLs were inaccessible using the website-reading tool. This is not a verified HTTP 403 and cannot prove that all API requests require WebView. No current JS bundle or chapter API response was captured.
+## Live tests completed 11 October 2026 (GitHub Actions)
+1. **Unsigned direct chapter API:** One ordinary GET to /api/v1/manga/rrglg/chapters?limit=1&order[number]=desc&page=1 on comix.ws returned **HTTP 403** with no usable chapter JSON. No retries, token/signature extraction, or challenge bypass was performed. This is evidence for the tested route only, not proof that all requests fail.
+   - Run: https://github.com/afroazn/comix-tachimanga-ios/actions/runs/38122895553
+2. **Public title HTML:** One normal GET to a publicly indexed Comix title page returned valid script#initial-data JSON with **four query entries** but **zero chapter-list candidates** matching the upstream Chapter DTO.
+   - Run: https://github.com/afroazn/comix-tachimanga-ios/actions/runs/38122701093
+3. **Query structure of the same title:** Embedded JSON query keys were manga detail, recommended, groups, and collections. There was **no chapter-list query** in this particular page's embedded data. The detail object exposes latest/first chapter links, not the full chapter catalogue.
+   - Run: https://github.com/afroazn/comix-tachimanga-ios/actions/runs/38122784905
+4. **Offline validation:** **16 synthetic/unit tests passed** for read-only HTML extraction, structure inspection, and API response classification; these do not test the current website or iOS app.
+   - Run: https://github.com/afroazn/comix-tachimanga-ios/actions/runs/38122895503
+
+**Interpretation:** For the tested page and unsigned request, native HTTP does not provide the complete chapter list. The existing Kotlin native path already knows the API endpoint and signing algorithm, but bootstraps dynamic cipher material through Android WebView. There is no verified standalone Stage A fix at present. Additional changes must be backed by a reproducible legitimate response; no hard-coded signing keys, guessed endpoints, or invented working extension.
 
 ## Native HTML diagnostic
 research/stage_a_native_http_probe.py inspects HTML for script#initial-data JSON and recognizes arrays whose objects contain numeric chapter id and number fields, matching the upstream Chapter DTO. It does not execute JavaScript, reproduce browser challenges, sign requests, or log chapter text.
