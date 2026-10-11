@@ -23,7 +23,7 @@ In copied Comix.kt's getPageList(), getNativePageList() was unavailable or faile
 ## Experimental extension-only patch
 Branch `fix/comix-ios-page-capture-prototype` extends the page capture script to observe resolved `Response.json()` results and chapter JSON fetched by `fetch` or XHR. It preserves and forwards original responses unchanged and only calls the existing bridge for a valid `result.pages` object. The Android-specific Kotlin source on research branches was otherwise preserved.
 
-**Do not merge, distribute, or install as fixed until tests pass and a real iPhone chapter image list loads.** The regression test source is saved in research/test_page_capture.cjs; GitHub workflow creation was blocked so CI confirmation is not yet available. The copied extension is not independently buildable as an iOS package yet.
+**Do not merge, distribute, or install as fixed until a real iPhone chapter image list loads.** The regression test source is saved in research/test_page_capture.cjs. On 11 Oct 2026, six synthetic browser scenarios were executed using the JavaScript extracted directly from the modified Kotlin source in an isolated JavaScript evaluator; **all six passed** (initial-data, Response.json, fetch, unrelated fetch ignored, XHR, repeated polling). These results are only synthetic. GitHub workflow creation was blocked, so GitHub Actions CI is not available for this branch. The copied extension is not independently buildable as an iOS package yet.
 
 ## Recommended verification
 1. Offline JS fixtures: page HTML embedded JSON; `Response.json()`; `fetch` chapter API JSON; unrelated network responses; XHR; repeated polling.
