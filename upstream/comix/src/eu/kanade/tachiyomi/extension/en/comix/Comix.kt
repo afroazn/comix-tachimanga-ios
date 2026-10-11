@@ -734,6 +734,7 @@ abstract class Comix :
                     const payloadKey = '__comixPagePayload';
                     const capture = parsed => {
                         try {
+                            if (window[payloadKey]) return true;
                             if (parsed && parsed.result && parsed.result.pages) {
                                 window[payloadKey] = JSON.stringify(parsed);
                                 window.$passPayloadName(window[payloadKey]);
