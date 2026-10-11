@@ -734,6 +734,7 @@ abstract class Comix :
                     const payloadKey = '__comixPagePayload';
                     const capture = parsed => {
                         try {
+                            if (window[payloadKey]) return true;
                             if (parsed && parsed.result && parsed.result.pages) {
                                 window[payloadKey] = JSON.stringify(parsed);
                                 window.$passPayloadName(window[payloadKey]);
@@ -752,7 +753,62 @@ abstract class Comix :
                     } catch (e) {}
 
                     if (window[payloadKey]) return window[payloadKey];
-                    if (JSON.parse.__comixPageCaptureInstalled) return null;
+                    // iOS WKWebView and modern fetch clients may deserialize
+                    // JSON without calling the global JSON.parse function.
+                    // Capture the resolved page result too, without changing
+                    // the original fetch/XHR result consumed by Comix.
+                    if (window.__comixPageCaptureInstalled) return null;
+                    window.__comixPageCaptureInstalled = true;
+
+                    if (typeof Response !== 'undefined' &&
+                        Response.prototype && typeof Response.prototype.json === 'function') {
+                        const originalResponseJson = Response.prototype.json;
+                        Response.prototype.json = function () {
+                            return originalResponseJson.apply(this, arguments).then(parsed => {
+                                capture(parsed);
+                                return parsed;
+                            });
+                        };
+                    }
+
+                    const originalFetch = window.fetch;
+                    if (typeof originalFetch === 'function') {
+                        window.fetch = function () {
+                            return originalFetch.apply(this, arguments).then(response => {
+                                try {
+                                    const url = new URL(response.url || '', window.location.href);
+                                    if (/^\/api\/v1\/chapters\/\d+(?:\/|$)/.test(url.pathname)) {
+                                        response.clone().text().then(text => {
+                                            try { capture(JSON.parse(text)); } catch (e) {}
+                                        }).catch(() => {});
+                                    }
+                                } catch (e) {}
+                                return response;
+                            });
+                        };
+                    }
+
+                    if (typeof XMLHttpRequest !== 'undefined' &&
+                        typeof XMLHttpRequest.prototype.send === 'function') {
+                        const originalXhrOpen = XMLHttpRequest.prototype.open;
+                        const originalXhrSend = XMLHttpRequest.prototype.send;
+                        XMLHttpRequest.prototype.open = function (method, url) {
+                            this.__comixPageCaptureUrl = String(url || '');
+                            return originalXhrOpen.apply(this, arguments);
+                        };
+                        XMLHttpRequest.prototype.send = function () {
+                            this.addEventListener('load', function () {
+                                try {
+                                    const url = new URL(this.__comixPageCaptureUrl || '', window.location.href);
+                                    if (/^\/api\/v1\/chapters\/\d+(?:\/|$)/.test(url.pathname)) {
+                                        capture(JSON.parse(this.responseText));
+                                    }
+                                } catch (e) {}
+                            });
+                            return originalXhrSend.apply(this, arguments);
+                        };
+                    }
+
                     const originalParse = JSON.parse;
                     const proxiedParse = new Proxy(originalParse, {
                         apply(target, thisArg, args) {
