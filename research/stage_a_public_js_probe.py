@@ -96,10 +96,15 @@ def analyze(html_url: str, max_chunks: int = 10) -> dict[str, object]:
         if key != "imports"
     }
     result["main"]["imports_count"] = len(main_stats["imports"])
+    total_js_bytes = 0
     for name in main_stats["imports"][:max_chunks]:
+        if total_js_bytes > 8 * 1024 * 1024:
+            result["errors"].append("Stopped at 8 MiB cumulative chunk limit")
+            break
         url = urljoin(main, name)
         try:
             stats = inspect_js(fetch(url))
+            total_js_bytes += stats["js_bytes"]
             result["chunks"].append({
                 "file": name.rsplit("/", 1)[-1],
                 "atob_mentions": stats["atob_mentions"],
@@ -119,8 +124,8 @@ def main() -> int:
     arg.add_argument("--url", required=True)
     arg.add_argument("--max-chunks", type=int, default=10)
     opts = arg.parse_args()
-    if not 0 <= opts.max_chunks <= 10:
-        arg.error("max-chunks must be between 0 and 10")
+    if not 0 <= opts.max_chunks <= 40:
+        arg.error("max-chunks must be between 0 and 40")
     try:
         print(json.dumps(analyze(opts.url, opts.max_chunks), indent=2))
     except Exception as error:
