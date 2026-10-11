@@ -1,0 +1,25 @@
+name: Stage A full public JS structure sweep
+
+on:
+  push:
+    branches:
+      - research/stage-a-public-js
+    paths:
+      - .github/workflows/stage-a-all-imports-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  read-only-js:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Synthetic test suite
+        run: python -m unittest discover -s tests -p 'test_stage_a*.py' -v
+      - name: Structural metadata on up to 34 public JS imports
+        run: python research/stage_a_public_js_probe.py --url 'https://comix.ws/title/rrglg-the-great-journey-of-teenagers-folly-of-youths-arc' --max-chunks 34
